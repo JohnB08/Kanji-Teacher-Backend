@@ -25,11 +25,11 @@ public class PopulateKanji : ControllerBase
     {
         try
         {
-            string BaseUrl = "https://kanjiapi.dev/v1/";
+            string BaseUrl = "https://kanjiapi.dev/v1/kanji/";
             int MaxGrade = 8;
             HttpClient client = new HttpClient();
             List<string> Chars = [];
-            for (int i = 0; i <= MaxGrade; i++)
+            for (int i = 1; i <= MaxGrade; i++)
             {
                 if (i == 7) continue;
                 var result = await client.GetAsync(BaseUrl + $"grade-{i}");

@@ -30,8 +30,7 @@ public class FirebaseService
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            throw;
+            throw new Exception(ex.Message);
         }
     }
 }

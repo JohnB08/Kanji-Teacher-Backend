@@ -26,13 +26,19 @@ public class FlashCardDataController : ControllerBase
         var authHeader = Request.Headers.Authorization.FirstOrDefault();
         if (authHeader == null || !authHeader.StartsWith("Bearer "))
         {
-            return Unauthorized("Authorization header is missing or invalid");
+            return Unauthorized(new
+            {
+                message = "Authorization header is missing or invalid"
+            });
         }
         var token = authHeader["Bearer ".Length..].Trim();
         var uid = await _service.ValidateFirebaseToken(token);
         if (uid == null)
         {
-            return Unauthorized("Token is Invalid");
+            return Unauthorized(new
+            {
+                message = $"Authorization header is missing or invalid {uid}"
+            });
         }
         var currentUser = UserHandler.GetUser(uid, _context);
         var getQuestions = RelationHandler.GetRelationAndAnswers(currentUser, _context);
