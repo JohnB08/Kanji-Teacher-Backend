@@ -1,0 +1,54 @@
+# .NET-specific files
+bin/
+obj/
+FirebaseConfig/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+*.vspscc
+*.vssscc
+*.user
+*.rsuser
+*.suo
+*.sln.docstates
+
+# Rider (JetBrains) specific
+.idea/
+*.sln.iml
+
+# Visual Studio Code specific
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Entity Framework migrations
+Migrations/
+
+# User-specific files
+*.swp
+*.sln.ide
+*.psess
+*.pidb
+
+# ASP.NET Core specific
+wwwroot/node_modules/
+wwwroot/lib/
+.env
+
+# Logs and databases
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# Auto-generated files
+Generated_Code/
