@@ -16,6 +16,13 @@ public partial class Character
     public string? OnReadings { get; set; }
     public required string Description { get; set; }
     public List<UserCharacterRelation> Relations { get; set; }
+
+    /// <summary>
+    /// Function to Set a new character in the database. 
+    /// </summary>
+    /// <param name="json"> String representing the json object fetched from the KanjiDev API.</param>
+    /// <param name="context"> The server's database context. </param>
+    /// <exception cref="NullReferenceException">If the json deserialization returns a null object. Throw.</exception>
     public static void SetEntity(string json, KTContext context)
     {
         var baseEntity = JsonSerializer.Deserialize<KanjiDevJson>(json) ?? throw new NullReferenceException("Missing data in JSON");

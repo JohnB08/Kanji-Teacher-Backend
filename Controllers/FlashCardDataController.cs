@@ -16,6 +16,10 @@ public class FlashCardDataController : ControllerBase
         _context = context;
         _service = service;
     }
+    /// <summary>
+    /// Gets the flash card data for the spesific uid.
+    /// </summary>
+    /// <returns></returns>
     [HttpGet("getFlashCard")]
     public async Task<IActionResult> GetFlashCard()
     {
@@ -35,6 +39,12 @@ public class FlashCardDataController : ControllerBase
         var json = JsonSerializer.Serialize(getQuestions);
         return Ok(json);
     }
+    /// <summary>
+    /// validates the query param answer with the query param id and the uid in the token
+    /// </summary>
+    /// <param name="id">the id of the relation</param>
+    /// <param name="answer">the user's answer</param>
+    /// <returns></returns>
     [HttpGet("validateAnswer")]
     public async Task<IActionResult> ValidateAnswer([FromQuery] int id, [FromQuery] string answer)
     {

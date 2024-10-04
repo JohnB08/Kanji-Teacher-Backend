@@ -15,6 +15,11 @@ public class PopulateKanji : ControllerBase
     {
         _context = context;
     }
+    /// <summary>
+    /// Controller to populate the database with Kanji symbols from Kanjiapi.dev.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="NullReferenceException">throws if it cannot find the initial list of chars.</exception>
     [HttpGet("pull_kanji")]
     public async Task<IActionResult> FetchKanji()
     {

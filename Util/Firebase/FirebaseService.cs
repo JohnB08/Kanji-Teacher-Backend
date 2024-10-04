@@ -15,6 +15,11 @@ public class FirebaseService
             }
         );
     }
+    /// <summary>
+    /// Function for validating a jwt token through Firebase.
+    /// </summary>
+    /// <param name="token">a string representing the JWT token.</param>
+    /// <returns> the uid from the token, or throws a general error. </returns>
     public async Task<string> ValidateFirebaseToken(string token)
     {
         try
