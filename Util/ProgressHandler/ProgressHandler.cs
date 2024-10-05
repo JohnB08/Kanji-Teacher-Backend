@@ -28,8 +28,8 @@ public class ProgressHandler
         if (CheckProgress(user, context))
         {
             user.MaxGrade += 1;
-            context.SaveChanges();
             RelationHandler.CreateRelation(user, context);
+            context.SaveChanges();
             return;
         }
         return;
