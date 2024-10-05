@@ -15,7 +15,7 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 # Use a lightweight runtime image for running the app
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 # Set the working directory in the runtime container
 WORKDIR /app
