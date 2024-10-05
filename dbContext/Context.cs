@@ -11,7 +11,7 @@ public class KTContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseSqlite(
-            "Data Source=./var/data/KanjiTeacherDatabase.db"
+            "Data Source=KanjiTeacherDatabase.db"
         );
     }
 }
