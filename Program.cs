@@ -1,10 +1,11 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.Util;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+Env.Load(".env");
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddCors(options =>
@@ -24,7 +25,6 @@ builder.Services.AddDbContext<KTContext>();
 builder.Services.AddSingleton<FirebaseService>();
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
