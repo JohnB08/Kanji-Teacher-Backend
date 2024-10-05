@@ -32,8 +32,7 @@ public class UserHandler
     /// <returns>user object</returns>
     public static UserTable GetUser(string uid, KTContext context)
     {
-        var existingUser = context.Users.Where(e => e.Uid == uid).First();
-        if (existingUser == null) return CreateUser(uid, context);
-        else return existingUser;
+        var existingUser = context.Users.FirstOrDefault(e => e.Uid == uid) ?? CreateUser(uid, context);
+        return existingUser;
     }
 }

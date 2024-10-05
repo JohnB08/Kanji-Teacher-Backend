@@ -1,6 +1,8 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using FirebaseAdmin.Auth;
+using SQLitePCL;
+using System.Text;
 
 namespace Kanji_teacher_backend.Util;
 
@@ -8,10 +10,17 @@ public class FirebaseService
 {
     public FirebaseService()
     {
+        string rawData = Environment.GetEnvironmentVariable("GOOGLE_AUTH_JSON");
+        if (string.IsNullOrEmpty(rawData))
+        {
+            throw new InvalidOperationException("Google credentials are not set in the environment variable.");
+        }
+        byte[] data = Convert.FromBase64String(rawData);
+        string googleCredentialsJson = Encoding.UTF8.GetString(data);
         FirebaseApp.Create(
             new AppOptions()
             {
-                Credential = GoogleCredential.FromFile("./ConfigFiles/FirebaseConfig/FirebaseConfig.json")
+                Credential = GoogleCredential.FromJson(googleCredentialsJson)
             }
         );
     }
@@ -30,8 +39,7 @@ public class FirebaseService
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            throw;
+            throw new Exception(ex.Message);
         }
     }
 }

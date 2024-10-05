@@ -1,5 +1,6 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.models;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kanji_teacher_backend.Util;
@@ -15,18 +16,21 @@ public class RelationHandler
     {
         List<UserCharacterRelation> newRelations = [];
         var Chars = context.Characters.Where(e => e.Grade == user.MaxGrade).ToList();
-        for (int i = 0; i < Chars.Count; i++)
+        if (Chars.Count > 0)
         {
-            UserCharacterRelation relation = new()
+            for (int i = 0; i < Chars.Count; i++)
             {
-                User = user,
-                Char = Chars[i],
-                TimesAttempted = 0,
-                TimesCompleted = 0
-            };
-            newRelations.Add(relation);
+                UserCharacterRelation relation = new()
+                {
+                    User = user,
+                    Char = Chars[i],
+                    TimesAttempted = 0,
+                    TimesCompleted = 0
+                };
+                newRelations.Add(relation);
+            }
+            context.UserCharacterRelations.AddRange(newRelations);
         }
-        context.UserCharacterRelations.AddRange(newRelations);
     }
     /// <summary>
     /// Function to fetch a random relation based on a user. and generates data for a flash card on the front end. 
@@ -45,7 +49,8 @@ public class RelationHandler
     {
         var selectRelation = context.UserCharacterRelations.Where(e => e.User == user)
                                                             .OrderBy(e => EF.Functions.Random())
-                                                            .First()
+                                                            .Include(e => e.Char)
+                                                            .FirstOrDefault()
                                                              ??
                                                             throw new NullReferenceException($"Database relation missmatch. Missing relation for user {user.Id}");
         var relId = selectRelation.Id;
@@ -54,6 +59,7 @@ public class RelationHandler
         var answerList = context.Characters.Where(e => e.Description != relAnswer)
                                             .OrderBy(e => EF.Functions.Random())
                                             .Select(e => e.Description)
+                                            .Take(3)
                                             .ToList();
         answerList.Add(relAnswer);
         return new
@@ -77,8 +83,8 @@ public class RelationHandler
     /// <exception cref="Exception">If somehow the user is not connected to the relation with the id of Param.id, throw an exception.</exception>
     public static object ValidateAnswer(UserTable user, KTContext context, string answer, int id)
     {
-        var correctRelation = context.UserCharacterRelations.Find(id) ?? throw new NullReferenceException($"Database missmatch, no relation with Id {id}");
-        if (correctRelation.User != user) throw new Exception($"User missmatch, {user.Id} is not associated with {correctRelation.Id}");
+        var correctRelation = context.UserCharacterRelations.Include(e => e.Char).Include(e => e.User).FirstOrDefault(e => e.Id == id) ?? throw new NullReferenceException($"Database missmatch, no relation with Id {id}");
+        if (correctRelation.User.Id != user.Id) throw new Exception($"User missmatch, {user.Id} is not associated with {correctRelation.Id}");
         correctRelation.TimesAttempted += 1;
         if (correctRelation.Char.Description == answer)
         {
@@ -86,8 +92,23 @@ public class RelationHandler
             context.SaveChanges();
             return new
             {
-                CharacterInfo = correctRelation.Char,
-                Correct = true
+                CharacterInfo = new
+                {
+                    Grade = correctRelation.Char.Grade,
+                    Description = correctRelation.Char.Description,
+                    Char = correctRelation.Char.Char,
+                    KunReadings = correctRelation.Char.KunReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.KunReadings.Split(","))
+                                                                : "",
+                    Meanings = correctRelation.Char.Meanings != null
+                                                                ? string.Join(", ", correctRelation.Char.Meanings.Split(","))
+                                                                : "",
+                    OnReadings = correctRelation.Char.OnReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.OnReadings.Split(","))
+                                                                : ""
+                },
+                Correct = true,
+                CanProgress = ProgressHandler.CheckProgress(user, context)
             };
         }
         else
@@ -95,8 +116,23 @@ public class RelationHandler
             context.SaveChanges();
             return new
             {
-                CharaterInfo = correctRelation.Char,
-                Correct = false
+                CharacterInfo = new
+                {
+                    Grade = correctRelation.Char.Grade,
+                    Description = correctRelation.Char.Description,
+                    Char = correctRelation.Char.Char,
+                    KunReadings = correctRelation.Char.KunReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.KunReadings.Split(","))
+                                                                : "",
+                    Meanings = correctRelation.Char.Meanings != null
+                                                                ? string.Join(", ", correctRelation.Char.Meanings.Split(","))
+                                                                : "",
+                    OnReadings = correctRelation.Char.OnReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.OnReadings.Split(","))
+                                                                : ""
+                },
+                Correct = false,
+                CanProgress = false
             };
         }
     }
