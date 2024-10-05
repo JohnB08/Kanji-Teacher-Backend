@@ -27,4 +27,4 @@ COPY --from=build /app/out .
 EXPOSE 80
 
 # Define the entry point for the container
-ENTRYPOINT ["dotnet", "kanji_teacher_backend.dll"]
+ENTRYPOINT ["dotnet", "Kanji_Teacher_Backend.dll"]
