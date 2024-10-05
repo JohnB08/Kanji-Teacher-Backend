@@ -21,29 +21,48 @@ public class FlashCardDataController : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpGet("getFlashCard")]
-    public async Task<IActionResult> GetFlashCard()
+    public async Task<IActionResult> GetFlashCard([FromQuery] bool? progress)
     {
-        var authHeader = Request.Headers.Authorization.FirstOrDefault();
-        if (authHeader == null || !authHeader.StartsWith("Bearer "))
+        try
         {
-            return Unauthorized(new
+            /* Validate token existence */
+            var authHeader = Request.Headers.Authorization.FirstOrDefault();
+            if (authHeader == null || !authHeader.StartsWith("Bearer "))
             {
-                message = "Authorization header is missing or invalid"
+                return Unauthorized(new
+                {
+                    message = "Authorization header is missing or invalid"
+                });
+            }
+            var token = authHeader["Bearer ".Length..].Trim();
+            /* Validate token on firebase */
+            var uid = await _service.ValidateFirebaseToken(token);
+            if (uid == null)
+            {
+                return Unauthorized(new
+                {
+                    message = $"Authorization header is missing or invalid {uid}"
+                });
+            }
+            /* Fetch user associated with token */
+            var currentUser = UserHandler.GetUser(uid, _context);
+            /* If user wants to progress, upgrade Grade. */
+            if (progress != null && progress == true)
+            {
+                ProgressHandler.UpgradeGrade(currentUser, _context);
+            }
+            /* Fetch new flashcard data, and return as json */
+            var getQuestions = RelationHandler.GetRelationAndAnswers(currentUser, _context);
+            var json = JsonSerializer.Serialize(getQuestions);
+            return Ok(json);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = ex.Message
             });
         }
-        var token = authHeader["Bearer ".Length..].Trim();
-        var uid = await _service.ValidateFirebaseToken(token);
-        if (uid == null)
-        {
-            return Unauthorized(new
-            {
-                message = $"Authorization header is missing or invalid {uid}"
-            });
-        }
-        var currentUser = UserHandler.GetUser(uid, _context);
-        var getQuestions = RelationHandler.GetRelationAndAnswers(currentUser, _context);
-        var json = JsonSerializer.Serialize(getQuestions);
-        return Ok(json);
     }
     /// <summary>
     /// validates the query param answer with the query param id and the uid in the token
@@ -54,20 +73,34 @@ public class FlashCardDataController : ControllerBase
     [HttpGet("validateAnswer")]
     public async Task<IActionResult> ValidateAnswer([FromQuery] int id, [FromQuery] string answer)
     {
-        var authHeader = Request.Headers.Authorization.FirstOrDefault();
-        if (authHeader == null || !authHeader.StartsWith("Bearer "))
+        try
         {
-            return Unauthorized("Authorization header is missing or invalid");
+            /* Check for token */
+            var authHeader = Request.Headers.Authorization.FirstOrDefault();
+            if (authHeader == null || !authHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized("Authorization header is missing or invalid");
+            }
+            var token = authHeader["Bearer ".Length..].Trim();
+            /* Validate against firebase */
+            var uid = await _service.ValidateFirebaseToken(token);
+            if (uid == null)
+            {
+                return Unauthorized("Token is Invalid");
+            }
+            /* Fetch user associated with token */
+            var currentUser = UserHandler.GetUser(uid, _context);
+            /* validate answer, and return response as json. */
+            var validation = RelationHandler.ValidateAnswer(currentUser, _context, answer, id);
+            var json = JsonSerializer.Serialize(validation);
+            return Ok(json);
         }
-        var token = authHeader["Bearer ".Length..].Trim();
-        var uid = await _service.ValidateFirebaseToken(token);
-        if (uid == null)
+        catch (Exception ex)
         {
-            return Unauthorized("Token is Invalid");
+            return StatusCode(500, new
+            {
+                message = ex.Message
+            });
         }
-        var currentUser = UserHandler.GetUser(uid, _context);
-        var validation = RelationHandler.ValidateAnswer(currentUser, _context, answer, id);
-        var json = JsonSerializer.Serialize(validation);
-        return Ok(json);
     }
 }

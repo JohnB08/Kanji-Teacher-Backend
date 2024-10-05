@@ -16,18 +16,21 @@ public class RelationHandler
     {
         List<UserCharacterRelation> newRelations = [];
         var Chars = context.Characters.Where(e => e.Grade == user.MaxGrade).ToList();
-        for (int i = 0; i < Chars.Count; i++)
+        if (Chars.Count > 0)
         {
-            UserCharacterRelation relation = new()
+            for (int i = 0; i < Chars.Count; i++)
             {
-                User = user,
-                Char = Chars[i],
-                TimesAttempted = 0,
-                TimesCompleted = 0
-            };
-            newRelations.Add(relation);
+                UserCharacterRelation relation = new()
+                {
+                    User = user,
+                    Char = Chars[i],
+                    TimesAttempted = 0,
+                    TimesCompleted = 0
+                };
+                newRelations.Add(relation);
+            }
+            context.UserCharacterRelations.AddRange(newRelations);
         }
-        context.UserCharacterRelations.AddRange(newRelations);
     }
     /// <summary>
     /// Function to fetch a random relation based on a user. and generates data for a flash card on the front end. 
@@ -94,11 +97,18 @@ public class RelationHandler
                     Grade = correctRelation.Char.Grade,
                     Description = correctRelation.Char.Description,
                     Char = correctRelation.Char.Char,
-                    KunReadings = correctRelation.Char.KunReadings,
-                    Meanings = correctRelation.Char.Meanings,
-                    OnReadings = correctRelation.Char.OnReadings
+                    KunReadings = correctRelation.Char.KunReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.KunReadings.Split(","))
+                                                                : "",
+                    Meanings = correctRelation.Char.Meanings != null
+                                                                ? string.Join(", ", correctRelation.Char.Meanings.Split(","))
+                                                                : "",
+                    OnReadings = correctRelation.Char.OnReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.OnReadings.Split(","))
+                                                                : ""
                 },
-                Correct = true
+                Correct = true,
+                CanProgress = ProgressHandler.CheckProgress(user, context)
             };
         }
         else
@@ -111,11 +121,18 @@ public class RelationHandler
                     Grade = correctRelation.Char.Grade,
                     Description = correctRelation.Char.Description,
                     Char = correctRelation.Char.Char,
-                    KunReadings = correctRelation.Char.KunReadings,
-                    Meanings = correctRelation.Char.Meanings,
-                    OnReadings = correctRelation.Char.OnReadings
+                    KunReadings = correctRelation.Char.KunReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.KunReadings.Split(","))
+                                                                : "",
+                    Meanings = correctRelation.Char.Meanings != null
+                                                                ? string.Join(", ", correctRelation.Char.Meanings.Split(","))
+                                                                : "",
+                    OnReadings = correctRelation.Char.OnReadings != null
+                                                                ? string.Join(", ", correctRelation.Char.OnReadings.Split(","))
+                                                                : ""
                 },
-                Correct = false
+                Correct = false,
+                CanProgress = false
             };
         }
     }
