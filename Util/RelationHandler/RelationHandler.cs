@@ -1,6 +1,5 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.models;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kanji_teacher_backend.Util;
@@ -56,6 +55,9 @@ public class RelationHandler
         var relId = selectRelation.Id;
         var relAnswer = selectRelation.Char.Description;
         var relKanji = selectRelation.Char.Char;
+        var KunReadings = selectRelation.Char.KunReadings != null
+                                                                ? string.Join(", ", selectRelation.Char.KunReadings.Split(","))
+                                                                : "";
         var answerList = context.Characters.Where(e => e.Description != relAnswer)
                                             .OrderBy(e => EF.Functions.Random())
                                             .Select(e => e.Description)
@@ -66,7 +68,8 @@ public class RelationHandler
         {
             Id = relId,
             Alternatives = answerList,
-            Kanji = relKanji
+            Kanji = relKanji,
+            KunReadings = KunReadings
         };
     }
     /// <summary>
@@ -97,15 +100,9 @@ public class RelationHandler
                     Grade = correctRelation.Char.Grade,
                     Description = correctRelation.Char.Description,
                     Char = correctRelation.Char.Char,
-                    KunReadings = correctRelation.Char.KunReadings != null
-                                                                ? string.Join(", ", correctRelation.Char.KunReadings.Split(","))
-                                                                : "",
                     Meanings = correctRelation.Char.Meanings != null
                                                                 ? string.Join(", ", correctRelation.Char.Meanings.Split(","))
                                                                 : "",
-                    OnReadings = correctRelation.Char.OnReadings != null
-                                                                ? string.Join(", ", correctRelation.Char.OnReadings.Split(","))
-                                                                : ""
                 },
                 Correct = true,
                 CanProgress = ProgressHandler.CheckProgress(user, context)
@@ -121,15 +118,9 @@ public class RelationHandler
                     Grade = correctRelation.Char.Grade,
                     Description = correctRelation.Char.Description,
                     Char = correctRelation.Char.Char,
-                    KunReadings = correctRelation.Char.KunReadings != null
-                                                                ? string.Join(", ", correctRelation.Char.KunReadings.Split(","))
-                                                                : "",
                     Meanings = correctRelation.Char.Meanings != null
                                                                 ? string.Join(", ", correctRelation.Char.Meanings.Split(","))
                                                                 : "",
-                    OnReadings = correctRelation.Char.OnReadings != null
-                                                                ? string.Join(", ", correctRelation.Char.OnReadings.Split(","))
-                                                                : ""
                 },
                 Correct = false,
                 CanProgress = false

@@ -103,4 +103,36 @@ public class FlashCardDataController : ControllerBase
             });
         }
     }
+    [HttpGet("userinfo")]
+    public async Task<IActionResult> GetUserInfo()
+    {
+        try
+        {
+            /* Check for token */
+            var authHeader = Request.Headers.Authorization.FirstOrDefault();
+            if (authHeader == null || !authHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized("Authorization header is missing or invalid");
+            }
+            var token = authHeader["Bearer ".Length..].Trim();
+            /* Validate against firebase */
+            var uid = await _service.ValidateFirebaseToken(token);
+            if (uid == null)
+            {
+                return Unauthorized("Token is Invalid");
+            }
+            /* Fetch user associated with token */
+            var currentUser = UserHandler.GetUser(uid, _context);
+            var userStats = UserHandler.GetUserInfo(currentUser, _context);
+            var json = JsonSerializer.Serialize(userStats);
+            return Ok(json);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = $"Server error, something went wrong: {ex.Message}"
+            });
+        }
+    }
 }

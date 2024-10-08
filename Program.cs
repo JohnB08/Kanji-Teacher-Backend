@@ -14,9 +14,9 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder
-                .AllowAnyOrigin()     // Allow all origins
-                .AllowAnyMethod()     // Allow all HTTP methods (GET, POST, etc.)
-                .AllowAnyHeader();    // Allow all headers
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
         });
 });
 builder.Services.AddEndpointsApiExplorer();
@@ -34,11 +34,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
+
+app.UseDefaultFiles();
+
 app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 
@@ -50,5 +56,7 @@ using (var context = new KTContext())
 {
     context.Database.EnsureCreated();
 }
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

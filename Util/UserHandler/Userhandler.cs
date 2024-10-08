@@ -1,5 +1,6 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kanji_teacher_backend.Util;
 
@@ -34,5 +35,33 @@ public class UserHandler
     {
         var existingUser = context.Users.FirstOrDefault(e => e.Uid == uid) ?? CreateUser(uid, context);
         return existingUser;
+    }
+    public static object GetUserInfo(UserTable user, KTContext context)
+    {
+        var TimesCompleted = context.UserCharacterRelations.Where(e => e.User == user).Sum(e => e.TimesCompleted);
+        var TimesAttempted = context.UserCharacterRelations.Where(e => e.User == user).Sum(e => e.TimesAttempted);
+        var MostCompletedChar = context.UserCharacterRelations.Where(e => e.User == user).Include(e => e.Char).OrderByDescending(e => e.TimesCompleted).FirstOrDefault();
+        var MostAttemptedChar = context.UserCharacterRelations.Where(e => e.User == user).Include(e => e.Char).OrderByDescending(e => e.TimesAttempted).FirstOrDefault();
+        return new
+        {
+            Grade = user.MaxGrade,
+            TimesCompleted,
+            TimesAttempted,
+            MostCompleted = new
+            {
+                MostCompletedChar?.Char.Description,
+                MostCompletedChar?.Char.Char,
+                Attempted = MostCompletedChar?.TimesAttempted,
+                Completed = MostCompletedChar?.TimesCompleted
+            },
+            MostAttempted = new
+            {
+                MostAttemptedChar?.Char.Description,
+                MostAttemptedChar?.Char.Char,
+                Attempted = MostAttemptedChar?.TimesAttempted,
+                Completed = MostAttemptedChar?.TimesCompleted
+            },
+            SuccessRate = $"{(float)TimesCompleted / TimesAttempted:P2}"
+        };
     }
 }
