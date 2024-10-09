@@ -20,6 +20,8 @@
     # Set the working directory in the runtime container
     WORKDIR /app
 
+    RUN mkdir -p var/data
+
     # Copy the built application from the build container to the runtime container
     COPY --from=build /app/out .
 

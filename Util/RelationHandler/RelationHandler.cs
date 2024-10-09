@@ -58,7 +58,7 @@ public class RelationHandler
         var KunReadings = selectRelation.Char.KunReadings != null
                                                                 ? string.Join(", ", selectRelation.Char.KunReadings.Split(","))
                                                                 : "";
-        var answerList = context.Characters.Where(e => e.Description != relAnswer)
+        var answerList = context.Characters.Where(e => e.Description != relAnswer && e.Grade == selectRelation.Char.Grade)
                                             .OrderBy(e => EF.Functions.Random())
                                             .Select(e => e.Description)
                                             .Take(3)

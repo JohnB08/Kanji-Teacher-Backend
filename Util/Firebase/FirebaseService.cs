@@ -10,7 +10,7 @@ public class FirebaseService
 {
     public FirebaseService()
     {
-        string rawData = Environment.GetEnvironmentVariable("GOOGLE_AUTH_JSON");
+        string rawData = Environment.GetEnvironmentVariable("GOOGLE_AUTH_JSON") ?? throw new NullReferenceException("Missing google auth data.");
         if (string.IsNullOrEmpty(rawData))
         {
             throw new InvalidOperationException("Google credentials are not set in the environment variable.");
