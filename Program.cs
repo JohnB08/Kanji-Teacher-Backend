@@ -7,14 +7,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 Env.Load(".env");
 builder.Services.AddControllers();
+var allowedOrigin = Environment.GetEnvironmentVariable("ALLOWED_ORIGIN") ?? "https://kanji-teacher-backend.onrender.com";
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    options.AddPolicy("AllowedOrigin",
         builder =>
         {
             builder
-                .AllowAnyOrigin()
+                .WithOrigins(allowedOrigin)
                 .AllowAnyMethod()
                 .AllowAnyHeader();
         });
@@ -38,7 +39,7 @@ app.UseStaticFiles();
 
 app.UseDefaultFiles();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowedOrigin");
 
 app.UseAuthorization();
 
