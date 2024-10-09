@@ -14,7 +14,7 @@ out/
 *.rsuser
 *.suo
 *.sln.docstates
-
+Kanji-Teacher-Backend.sln
 # Rider (JetBrains) specific
 .idea/
 *.sln.iml
