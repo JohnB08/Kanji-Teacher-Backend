@@ -10,8 +10,9 @@ public class KTContext : DbContext
     public DbSet<UserCharacterRelation> UserCharacterRelations { get; set; }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+        var databaseLocation = Environment.GetEnvironmentVariable("DATABASE_LOCATION") ?? "/var/data/KanjiTeacherDatabase.db";
         optionsBuilder.UseSqlite(
-            "Data Source=./var/data/KanjiTeacherDatabase.db"
+            $"Data Source={databaseLocation}"
         );
     }
 }
