@@ -12,6 +12,7 @@ public partial class Character
     public required string Char { get; set; }
     public int Grade { get; set; }
     public string? KunReadings { get; set; }
+    public string? NameReadings { get; set; }
     public string? Meanings { get; set; }
     public string? OnReadings { get; set; }
     public required string Description { get; set; }
@@ -33,7 +34,8 @@ public partial class Character
             Description = baseEntity.Description,
             KunReadings = string.Join(",", baseEntity.KunReadings),
             OnReadings = string.Join(",", baseEntity.OnReadings),
-            Meanings = string.Join(",", baseEntity.Meanings)
+            Meanings = string.Join(",", baseEntity.Meanings),
+            NameReadings = string.Join(",", baseEntity.NameReadings)
         };
         context.Characters.Add(entity);
         context.SaveChanges();
@@ -50,6 +52,8 @@ public class KanjiDevJson
     public required string Char { get; set; }
     [JsonPropertyName("kun_readings")]
     public required List<string> KunReadings { get; set; }
+    [JsonPropertyName("name_readings")]
+    public required List<string> NameReadings { get; set; }
     [JsonPropertyName("meanings")]
     public required List<string> Meanings { get; set; }
     [JsonPropertyName("on_readings")]

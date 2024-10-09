@@ -55,9 +55,20 @@ public class RelationHandler
         var relId = selectRelation.Id;
         var relAnswer = selectRelation.Char.Description;
         var relKanji = selectRelation.Char.Char;
-        var readings = selectRelation.Char.KunReadings != ""
-                                                                ? string.Join(", ", selectRelation.Char.KunReadings.Split(","))
-                                                                : string.Join(", ", selectRelation.Char.OnReadings.Split(","));
+        string readings;
+        if (selectRelation.Char.NameReadings != null && selectRelation.Char.NameReadings != "")
+        {
+            readings = string.Join(", ", selectRelation.Char.NameReadings.Split(","));
+        }
+        else if (selectRelation.Char.KunReadings != null && selectRelation.Char.KunReadings != "")
+        {
+            readings = string.Join(", ", selectRelation.Char.KunReadings.Split(","));
+        }
+        else if (selectRelation.Char.OnReadings != null && selectRelation.Char.KunReadings != "")
+        {
+            readings = string.Join(", ", selectRelation.Char.OnReadings.Split(","));
+        }
+        else readings = "";
         var answerList = context.Characters.Where(e => e.Description != relAnswer && e.Grade == selectRelation.Char.Grade)
                                             .OrderBy(e => EF.Functions.Random())
                                             .Select(e => e.Description)
