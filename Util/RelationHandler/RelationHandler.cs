@@ -15,7 +15,7 @@ public class RelationHandler
     public static void CreateRelation(UserTable user, KTContext context)
     {
         List<UserCharacterRelation> newRelations = [];
-        var Chars = context.Characters.Where(e => e.Grade == user.MaxGrade).ToList();
+        var Chars = context.Characters.Where(e => e.JLPT == user.MaxGrade).ToList();
         if (Chars.Count > 0)
         {
             for (int i = 0; i < Chars.Count; i++)
@@ -61,7 +61,7 @@ public class RelationHandler
             var KunReadings = string.Join(", ", selectRelation.Char.KunReadings.Split(",").Take(3));
             var OnRomanji = OnReadings == "" ? null : await converter.Convert(OnReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
             var KunRomanji = KunReadings == "" ? null : await converter.Convert(KunReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
-            var answerList = context.Characters.Where(e => e.Description != relAnswer && e.Grade == selectRelation.Char.Grade)
+            var answerList = context.Characters.Where(e => e.Description != relAnswer && e.JLPT == selectRelation.Char.JLPT)
                                                 .OrderBy(e => EF.Functions.Random())
                                                 .Select(e => e.Description)
                                                 .Take(3)
@@ -78,7 +78,7 @@ public class RelationHandler
         }
         else
         {
-            var randomChar = context.Characters.Where(e => e.Grade == 1)
+            var randomChar = context.Characters.Where(e => e.JLPT == 4)
                                         .OrderBy(e => EF.Functions.Random())
                                         .FirstOrDefault()
                                         ?? throw new NullReferenceException($"could not find a random character");
@@ -131,7 +131,7 @@ public class RelationHandler
                 {
                     CharacterInfo = new
                     {
-                        Grade = correctRelation.Char.Grade,
+                        Grade = correctRelation.Char.JLPT,
                         Description = correctRelation.Char.Description,
                         Char = correctRelation.Char.Char,
                         Meanings = correctRelation.Char.Meanings != null
@@ -151,7 +151,7 @@ public class RelationHandler
                 {
                     CharacterInfo = new
                     {
-                        Grade = correctRelation.Char.Grade,
+                        Grade = correctRelation.Char.JLPT,
                         Description = correctRelation.Char.Description,
                         Char = correctRelation.Char.Char,
                         Meanings = correctRelation.Char.Meanings != null
@@ -170,7 +170,7 @@ public class RelationHandler
             {
                 CharacterInfo = new
                 {
-                    Grade = correctChar.Grade,
+                    Grade = correctChar.JLPT,
                     Description = correctChar.Description,
                     Char = correctChar.Char,
                     Meanings = correctChar.Meanings != null

@@ -11,6 +11,7 @@ public partial class Character
     public int Id { get; set; }
     public required string Char { get; set; }
     public int Grade { get; set; }
+    public int JLPT { get; set; }
     public string? KunReadings { get; set; }
     public string? NameReadings { get; set; }
     public string? Meanings { get; set; }
@@ -31,6 +32,7 @@ public partial class Character
         {
             Grade = baseEntity.Grade,
             Char = baseEntity.Char,
+            JLPT = baseEntity.JLPT ?? 0,
             Description = baseEntity.Description,
             KunReadings = string.Join(",", baseEntity.KunReadings),
             OnReadings = string.Join(",", baseEntity.OnReadings),
@@ -46,6 +48,8 @@ public class KanjiDevJson
 {
     [JsonPropertyName("grade")]
     public int Grade { get; set; }
+    [JsonPropertyName("jlpt")]
+    public int? JLPT { get; set; }
     [JsonPropertyName("heisig_en")]
     public required string Description { get; set; }
     [JsonPropertyName("kanji")]

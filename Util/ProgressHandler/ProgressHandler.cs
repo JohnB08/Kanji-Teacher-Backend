@@ -8,15 +8,15 @@ public class ProgressHandler
     public static bool CheckProgress(UserTable user)
     {
         var Grade = user.MaxGrade;
-        if (Grade > 8) return false;
+        if (Grade < 1) return false;
         var xp = user.Xp;
-        return xp > 100 * Grade;
+        return xp > 100 * (6 - Grade);
     }
     public static void UpgradeGrade(UserTable user, KTContext context)
     {
         if (CheckProgress(user))
         {
-            user.MaxGrade += 1;
+            user.MaxGrade -= 1;
             user.Xp = 0;
             RelationHandler.CreateRelation(user, context);
             context.SaveChanges();

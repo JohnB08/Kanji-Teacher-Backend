@@ -18,7 +18,7 @@ public class UserHandler
         UserTable user = new()
         {
             Uid = uid,
-            MaxGrade = 1,
+            MaxGrade = 4,
             Xp = 0
         };
         context.Users.Add(user);
@@ -49,7 +49,7 @@ public class UserHandler
             TimesCompleted,
             TimesAttempted,
             CurrentProgress = user.Xp,
-            CurrentLimit = user.MaxGrade * 100,
+            CurrentLimit = (6 - user.MaxGrade) * 100,
             MostCompleted = new
             {
                 MostCompletedChar?.Char.Description,
