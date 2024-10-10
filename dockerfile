@@ -20,7 +20,10 @@
     # Set the working directory in the runtime container
     WORKDIR /app
 
-    RUN mkdir -p var/data
+    # Install SQLite cli tools
+    RUN apt-get update
+
+    RUN apt-get install sqlite3 -y
 
     # Copy the built application from the build container to the runtime container
     COPY --from=build /app/out .

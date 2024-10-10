@@ -1,6 +1,7 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.Util;
 using DotNetEnv;
+using Kawazu;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<KTContext>();
 builder.Services.AddSingleton<FirebaseService>();
+builder.Services.AddSingleton<KawazuConverter>();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

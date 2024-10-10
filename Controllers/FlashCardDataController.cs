@@ -2,6 +2,7 @@ using System.Text.Json;
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.Util;
 using Microsoft.AspNetCore.Mvc;
+using Kawazu;
 
 namespace Kanji_teacher_backend.Controllers;
 
@@ -11,10 +12,12 @@ public class FlashCardDataController : ControllerBase
 {
     private readonly KTContext _context;
     private readonly FirebaseService _service;
-    public FlashCardDataController(KTContext context, FirebaseService service)
+    private readonly KawazuConverter _converter;
+    public FlashCardDataController(KTContext context, FirebaseService service, KawazuConverter converter)
     {
         _context = context;
         _service = service;
+        _converter = converter;
     }
     /// <summary>
     /// Gets the flash card data for the spesific uid.
@@ -29,10 +32,9 @@ public class FlashCardDataController : ControllerBase
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader == null || !authHeader.StartsWith("Bearer "))
             {
-                return Unauthorized(new
-                {
-                    message = "Authorization header is missing or invalid"
-                });
+                var getQuestionsNoUser = await RelationHandler.GetRelationAndAnswers(null, _context, _converter);
+                var jsonnouser = JsonSerializer.Serialize(getQuestionsNoUser);
+                return Ok(jsonnouser);
             }
             var token = authHeader["Bearer ".Length..].Trim();
             /* Validate token on firebase */
@@ -52,7 +54,7 @@ public class FlashCardDataController : ControllerBase
                 ProgressHandler.UpgradeGrade(currentUser, _context);
             }
             /* Fetch new flashcard data, and return as json */
-            var getQuestions = RelationHandler.GetRelationAndAnswers(currentUser, _context);
+            var getQuestions = await RelationHandler.GetRelationAndAnswers(currentUser, _context, _converter);
             var json = JsonSerializer.Serialize(getQuestions);
             return Ok(json);
         }
@@ -79,7 +81,9 @@ public class FlashCardDataController : ControllerBase
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader == null || !authHeader.StartsWith("Bearer "))
             {
-                return Unauthorized("Authorization header is missing or invalid");
+                var validnouser = RelationHandler.ValidateAnswer(null, _context, answer, id);
+                var jsonnouser = JsonSerializer.Serialize(validnouser);
+                return Ok(jsonnouser);
             }
             var token = authHeader["Bearer ".Length..].Trim();
             /* Validate against firebase */

@@ -8,5 +8,6 @@ public partial class UserTable
     public int Id { get; set; }
     public required string Uid { get; set; }
     public required int MaxGrade { get; set; }
+    public required int Xp { get; set; }
     public List<UserCharacterRelation> Relations { get; set; }
 }

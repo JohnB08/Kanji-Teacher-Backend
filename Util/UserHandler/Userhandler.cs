@@ -18,7 +18,8 @@ public class UserHandler
         UserTable user = new()
         {
             Uid = uid,
-            MaxGrade = 1
+            MaxGrade = 1,
+            Xp = 0
         };
         context.Users.Add(user);
         RelationHandler.CreateRelation(user, context);
@@ -47,6 +48,8 @@ public class UserHandler
             Grade = user.MaxGrade,
             TimesCompleted,
             TimesAttempted,
+            CurrentProgress = user.Xp,
+            CurrentLimit = user.MaxGrade * 100,
             MostCompleted = new
             {
                 MostCompletedChar?.Char.Description,
