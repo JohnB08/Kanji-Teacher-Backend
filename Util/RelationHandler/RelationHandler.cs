@@ -72,8 +72,8 @@ public class RelationHandler
                 Id = relId,
                 Alternatives = answerList,
                 Kanji = relKanji,
-                OnReadings = OnReadings == "" ? "" : OnReadings += $" | {OnRomanji}",
-                KunReadings = KunReadings == "" ? "" : KunReadings += $" | {KunRomanji}"
+                OnReadings = OnReadings == "" ? "" : $"On: {OnReadings} | {OnRomanji}",
+                KunReadings = KunReadings == "" ? "" : $"Kun: {KunReadings} | {KunRomanji}"
             };
         }
         else
@@ -97,8 +97,8 @@ public class RelationHandler
                 Id = randomChar.Id,
                 Alternatives = answerList,
                 Kanji = randomChar.Char,
-                OnReadings = OnReadings == "" ? "" : OnReadings += $" | {OnRomanji}",
-                KunReadings = KunReadings == "" ? "" : KunReadings += $" | {KunRomanji}"
+                OnReadings = OnReadings == "" ? "" : $"On: {OnReadings} | {OnRomanji}",
+                KunReadings = KunReadings == "" ? "" : $"Kun: {KunReadings} | {KunRomanji}"
             };
         }
     }
@@ -125,7 +125,7 @@ public class RelationHandler
             if (correctRelation.Char.Description == answer)
             {
                 correctRelation.TimesCompleted += 1;
-                user.Xp += 5;
+                user.Xp += 4;
                 context.SaveChanges();
                 return new
                 {
