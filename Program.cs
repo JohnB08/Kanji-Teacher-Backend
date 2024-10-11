@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder
-                .WithOrigins(allowedOrigin)
+                .WithOrigins(allowedOrigin, "https://www.kanjiteacher.com", "https://kanjiteacher.com")
                 .AllowAnyMethod()
                 .AllowAnyHeader();
         });
