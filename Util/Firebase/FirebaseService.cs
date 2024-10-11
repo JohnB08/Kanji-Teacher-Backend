@@ -1,7 +1,6 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using FirebaseAdmin.Auth;
-using SQLitePCL;
 using System.Text;
 
 namespace Kanji_teacher_backend.Util;
