@@ -9,5 +9,6 @@ public partial class UserTable
     public required string Uid { get; set; }
     public required int MaxGrade { get; set; }
     public required int Xp { get; set; }
-    public List<UserCharacterRelation> Relations { get; set; }
+    public List<UserCharacterRelation> CharacterRelations { get; set; }
+    public List<UserWordRelation> WordRelations { get; set; }
 }

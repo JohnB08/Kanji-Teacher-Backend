@@ -12,19 +12,17 @@ public class FlashCardDataController : ControllerBase
 {
     private readonly KTContext _context;
     private readonly FirebaseService _service;
-    private readonly KawazuConverter _converter;
-    public FlashCardDataController(KTContext context, FirebaseService service, KawazuConverter converter)
+    public FlashCardDataController(KTContext context, FirebaseService service)
     {
         _context = context;
         _service = service;
-        _converter = converter;
     }
     /// <summary>
     /// Gets the flash card data for the spesific uid.
     /// </summary>
     /// <returns></returns>
     [HttpGet("getFlashCard")]
-    public async Task<IActionResult> GetFlashCard([FromQuery] bool? progress)
+    public async Task<IActionResult> GetFlashCard([FromQuery] bool? progress, [FromQuery] string mode)
     {
         try
         {
@@ -32,7 +30,7 @@ public class FlashCardDataController : ControllerBase
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader == null || !authHeader.StartsWith("Bearer "))
             {
-                var getQuestionsNoUser = await RelationHandler.GetRelationAndAnswers(null, _context, _converter);
+                var getQuestionsNoUser = UserCharacterRelationHandler.GetRelationAndAnswers(null, _context);
                 var jsonnouser = JsonSerializer.Serialize(getQuestionsNoUser);
                 return Ok(jsonnouser);
             }
@@ -54,7 +52,7 @@ public class FlashCardDataController : ControllerBase
                 ProgressHandler.UpgradeGrade(currentUser, _context);
             }
             /* Fetch new flashcard data, and return as json */
-            var getQuestions = await RelationHandler.GetRelationAndAnswers(currentUser, _context, _converter);
+            var getQuestions = mode == "character" ? UserCharacterRelationHandler.GetRelationAndAnswers(currentUser, _context) : UserWordRelationshipHandler.GetRelationAndAnswers(currentUser, _context);
             var json = JsonSerializer.Serialize(getQuestions);
             return Ok(json);
         }
@@ -73,7 +71,7 @@ public class FlashCardDataController : ControllerBase
     /// <param name="answer">the user's answer</param>
     /// <returns></returns>
     [HttpGet("validateAnswer")]
-    public async Task<IActionResult> ValidateAnswer([FromQuery] int id, [FromQuery] string answer)
+    public async Task<IActionResult> ValidateAnswer([FromQuery] int id, [FromQuery] string answer, [FromQuery] string mode)
     {
         try
         {
@@ -81,7 +79,7 @@ public class FlashCardDataController : ControllerBase
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader == null || !authHeader.StartsWith("Bearer "))
             {
-                var validnouser = RelationHandler.ValidateAnswer(null, _context, answer, id);
+                var validnouser = UserCharacterRelationHandler.ValidateAnswer(null, _context, answer, id);
                 var jsonnouser = JsonSerializer.Serialize(validnouser);
                 return Ok(jsonnouser);
             }
@@ -95,7 +93,7 @@ public class FlashCardDataController : ControllerBase
             /* Fetch user associated with token */
             var currentUser = UserHandler.GetUser(uid, _context);
             /* validate answer, and return response as json. */
-            var validation = RelationHandler.ValidateAnswer(currentUser, _context, answer, id);
+            var validation = mode == "character" ? UserCharacterRelationHandler.ValidateAnswer(currentUser, _context, answer, id) : UserWordRelationshipHandler.ValidateAnswer(currentUser, _context, answer, id);
             var json = JsonSerializer.Serialize(validation);
             return Ok(json);
         }

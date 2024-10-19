@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Kanji_teacher_backend.dbContext;
+using Kawazu;
 
 namespace Kanji_teacher_backend.models;
 
@@ -13,11 +14,13 @@ public partial class Character
     public int Grade { get; set; }
     public int JLPT { get; set; }
     public string? KunReadings { get; set; }
-    public string? NameReadings { get; set; }
-    public string? Meanings { get; set; }
+    public string? KunRomanji { get; set; }
     public string? OnReadings { get; set; }
+    public string? OnRomanji { get; set; }
     public required string Description { get; set; }
-    public List<UserCharacterRelation> Relations { get; set; }
+    public List<UserCharacterRelation> CharacterRelations { get; set; }
+    public List<WordCharacterRelation> WordRelations { get; set; }
+
 
     /// <summary>
     /// Function to Set a new character in the database. 
@@ -25,41 +28,41 @@ public partial class Character
     /// <param name="json"> String representing the json object fetched from the KanjiDev API.</param>
     /// <param name="context"> The server's database context. </param>
     /// <exception cref="NullReferenceException">If the json deserialization returns a null object. Throw.</exception>
-    public static void SetEntity(string json, KTContext context)
+    public static async Task SetEntities(string json, KTContext context, KawazuConverter converter)
     {
-        var baseEntity = JsonSerializer.Deserialize<KanjiDevJson>(json) ?? throw new NullReferenceException("Missing data in JSON");
-        Character entity = new()
+        var entities = JsonSerializer.Deserialize<Dictionary<string, KanjiInfo>>(json) ?? throw new NullReferenceException("Missing data in JSON");
+        foreach (var entity in entities)
         {
-            Grade = baseEntity.Grade,
-            Char = baseEntity.Char,
-            JLPT = baseEntity.JLPT ?? 0,
-            Description = baseEntity.Description,
-            KunReadings = string.Join(",", baseEntity.KunReadings),
-            OnReadings = string.Join(",", baseEntity.OnReadings),
-            Meanings = string.Join(",", baseEntity.Meanings),
-            NameReadings = string.Join(",", baseEntity.NameReadings)
-        };
-        context.Characters.Add(entity);
-        context.SaveChanges();
-        return;
+            var OnReadings = string.Join(", ", entity.Value.OnReadings);
+            var KunReadings = string.Join(", ", entity.Value.KunReadings);
+            var OnRomanji = OnReadings == "" ? null : await converter.Convert(OnReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
+            var KunRomanji = KunReadings == "" ? null : await converter.Convert(KunReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
+            Character newChar = new()
+            {
+                Char = entity.Key,
+                Grade = entity.Value.Grade ?? 0,
+                JLPT = entity.Value.JLPT ?? 0,
+                KunReadings = KunReadings,
+                OnReadings = OnReadings,
+                KunRomanji = KunRomanji,
+                OnRomanji = OnRomanji,
+                Description = string.Join(", ", entity.Value.Description)
+            };
+            context.Characters.Add(newChar);
+            context.SaveChanges();
+        }
     }
 }
-public class KanjiDevJson
+public class KanjiInfo
 {
     [JsonPropertyName("grade")]
-    public int Grade { get; set; }
-    [JsonPropertyName("jlpt")]
+    public int? Grade { get; set; }
+    [JsonPropertyName("jlpt_new")]
     public int? JLPT { get; set; }
-    [JsonPropertyName("heisig_en")]
-    public required string Description { get; set; }
-    [JsonPropertyName("kanji")]
-    public required string Char { get; set; }
-    [JsonPropertyName("kun_readings")]
-    public required List<string> KunReadings { get; set; }
-    [JsonPropertyName("name_readings")]
-    public required List<string> NameReadings { get; set; }
     [JsonPropertyName("meanings")]
-    public required List<string> Meanings { get; set; }
-    [JsonPropertyName("on_readings")]
+    public required List<string> Description { get; set; }
+    [JsonPropertyName("readings_kun")]
+    public required List<string> KunReadings { get; set; }
+    [JsonPropertyName("readings_on")]
     public required List<string> OnReadings { get; set; }
 }

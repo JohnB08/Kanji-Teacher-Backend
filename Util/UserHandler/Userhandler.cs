@@ -18,11 +18,12 @@ public class UserHandler
         UserTable user = new()
         {
             Uid = uid,
-            MaxGrade = 4,
+            MaxGrade = 5,
             Xp = 0
         };
         context.Users.Add(user);
-        RelationHandler.CreateRelation(user, context);
+        UserCharacterRelationHandler.CreateRelation(user, context);
+        UserWordRelationshipHandler.CreateRelation(user, context);
         context.SaveChanges();
         return user;
     }

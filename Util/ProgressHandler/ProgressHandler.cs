@@ -18,7 +18,8 @@ public class ProgressHandler
         {
             user.MaxGrade -= 1;
             user.Xp = 0;
-            RelationHandler.CreateRelation(user, context);
+            UserCharacterRelationHandler.CreateRelation(user, context);
+            UserWordRelationshipHandler.CreateRelation(user, context);
             context.SaveChanges();
             return;
         }
