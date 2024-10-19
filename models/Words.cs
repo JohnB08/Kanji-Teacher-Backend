@@ -16,6 +16,7 @@ public partial class Word
     public int JLPT { get; set; }
     public string Description { get; set; }
     public string Written { get; set; }
+    public double? Weight { get; set; }
     public string Pronounciation { get; set; }
     public string Romanji { get; set; }
     public List<UserWordRelation> UserRelations { get; set; }
@@ -105,6 +106,22 @@ public partial class Word
             }
         };
         await context.SaveChangesAsync();
+        foreach (var word in Words)
+        {
+            word.Weight = GetWordWeight(word, context);
+        }
+        context.UpdateRange(Words);
+        await context.SaveChangesAsync();
+    }
+    private static double GetWordWeight(Word word, KTContext context)
+    {
+        var CharacterFrequecies = context.WordCharacterRelations
+                                        .Where(wcr => wcr.WordId == word.Id)
+                                        .Include(wcr => wcr.Char)
+                                        .Select(wcr => wcr.Char.Freq)
+                                        .ToList();
+        var sumInverseFrequency = CharacterFrequecies.Sum(f => 1.0 / f);
+        return sumInverseFrequency;
     }
 }
 public class KanjiWord

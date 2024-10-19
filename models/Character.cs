@@ -13,6 +13,7 @@ public partial class Character
     public required string Char { get; set; }
     public int Grade { get; set; }
     public int JLPT { get; set; }
+    public int Freq { get; set; }
     public string? KunReadings { get; set; }
     public string? KunRomanji { get; set; }
     public string? OnReadings { get; set; }
@@ -42,6 +43,7 @@ public partial class Character
                 Char = entity.Key,
                 Grade = entity.Value.Grade ?? 0,
                 JLPT = entity.Value.JLPT ?? 0,
+                Freq = entity.Value.Freq ?? 3000,
                 KunReadings = KunReadings,
                 OnReadings = OnReadings,
                 KunRomanji = KunRomanji,
@@ -57,6 +59,8 @@ public class KanjiInfo
 {
     [JsonPropertyName("grade")]
     public int? Grade { get; set; }
+    [JsonPropertyName("freq")]
+    public int? Freq { get; set; }
     [JsonPropertyName("jlpt_new")]
     public int? JLPT { get; set; }
     [JsonPropertyName("meanings")]

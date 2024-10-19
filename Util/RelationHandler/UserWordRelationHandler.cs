@@ -49,8 +49,8 @@ public class UserWordRelationshipHandler
     {
         {
             var selectRelation = context.UserWordRelations.Where(e => e.User == user)
-                                                            .OrderBy(e => EF.Functions.Random())
                                                             .Include(e => e.Word)
+                                                            .OrderBy(e => EF.Functions.Random() / e.Word.Weight)
                                                             .AsNoTracking()
                                                             .FirstOrDefault()
                                                             ?? throw new NullReferenceException($"could not find a relation");
@@ -67,6 +67,7 @@ public class UserWordRelationshipHandler
                                                 .Select(rel => rel.Word.Description))
                                     .OrderBy(d => EF.Functions.Random())
                                     .Take(3)
+                                    .AsNoTracking()
                                     .ToList();
             answerList.Add(relAnswer);
             return new

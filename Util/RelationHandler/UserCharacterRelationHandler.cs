@@ -49,8 +49,8 @@ public class UserCharacterRelationHandler
         if (user != null)
         {
             var selectRelation = context.UserCharacterRelations.Where(e => e.User == user)
-                                                            .OrderBy(e => EF.Functions.Random())
                                                             .Include(e => e.Char)
+                                                            .OrderBy(e => EF.Functions.Random())
                                                             .AsNoTracking()
                                                             .FirstOrDefault()
                                                             ?? throw new NullReferenceException($"could not find a relation");
@@ -125,7 +125,7 @@ public class UserCharacterRelationHandler
                                                            .Include(e => e.User)
                                                            .FirstOrDefault(e => e.Id == id) ?? throw new NullReferenceException($"Database missmatch, no relation with Id {id}");
             correctRelation.TimesAttempted += 1;
-            var correctAnswer = correctRelation.Char.Description.Split(", ").FirstOrDefault();
+            var correctAnswer = correctRelation.Char.Description;
             if (correctAnswer == answer)
             {
                 correctRelation.TimesCompleted += 1;
