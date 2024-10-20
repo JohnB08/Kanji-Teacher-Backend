@@ -47,7 +47,7 @@ wwwroot/lib/
 
 # Logs and databases
 *.log
-*.db
+KanjiTeacherDatabase.db
 *.sqlite
 *.sqlite3
 
