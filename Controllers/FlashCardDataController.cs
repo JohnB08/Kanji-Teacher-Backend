@@ -2,7 +2,6 @@ using System.Text.Json;
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.Util;
 using Microsoft.AspNetCore.Mvc;
-using Kawazu;
 
 namespace Kanji_teacher_backend.Controllers;
 
@@ -12,19 +11,17 @@ public class FlashCardDataController : ControllerBase
 {
     private readonly KTContext _context;
     private readonly FirebaseService _service;
-    private readonly KawazuConverter _converter;
-    public FlashCardDataController(KTContext context, FirebaseService service, KawazuConverter converter)
+    public FlashCardDataController(KTContext context, FirebaseService service)
     {
         _context = context;
         _service = service;
-        _converter = converter;
     }
     /// <summary>
     /// Gets the flash card data for the spesific uid.
     /// </summary>
     /// <returns></returns>
     [HttpGet("getFlashCard")]
-    public async Task<IActionResult> GetFlashCard([FromQuery] bool? progress)
+    public async Task<IActionResult> GetFlashCard([FromQuery] bool? progress, [FromQuery] string mode)
     {
         try
         {
@@ -32,7 +29,7 @@ public class FlashCardDataController : ControllerBase
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader == null || !authHeader.StartsWith("Bearer "))
             {
-                var getQuestionsNoUser = await RelationHandler.GetRelationAndAnswers(null, _context, _converter);
+                var getQuestionsNoUser = UserCharacterRelationHandler.GetRelationAndAnswers(null, _context);
                 var jsonnouser = JsonSerializer.Serialize(getQuestionsNoUser);
                 return Ok(jsonnouser);
             }
@@ -54,7 +51,12 @@ public class FlashCardDataController : ControllerBase
                 ProgressHandler.UpgradeGrade(currentUser, _context);
             }
             /* Fetch new flashcard data, and return as json */
-            var getQuestions = await RelationHandler.GetRelationAndAnswers(currentUser, _context, _converter);
+            var getQuestions = mode switch
+            {
+                "character" => UserCharacterRelationHandler.GetRelationAndAnswers(currentUser, _context),
+                "phrase" => UserWordRelationshipHandler.GetRelationAndAnswers(currentUser, _context),
+                _ => throw new Exception($"Current mode not supported, {mode}")
+            };
             var json = JsonSerializer.Serialize(getQuestions);
             return Ok(json);
         }
@@ -73,7 +75,7 @@ public class FlashCardDataController : ControllerBase
     /// <param name="answer">the user's answer</param>
     /// <returns></returns>
     [HttpGet("validateAnswer")]
-    public async Task<IActionResult> ValidateAnswer([FromQuery] int id, [FromQuery] string answer)
+    public async Task<IActionResult> ValidateAnswer([FromQuery] int id, [FromQuery] string answer, [FromQuery] string mode)
     {
         try
         {
@@ -81,7 +83,7 @@ public class FlashCardDataController : ControllerBase
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader == null || !authHeader.StartsWith("Bearer "))
             {
-                var validnouser = RelationHandler.ValidateAnswer(null, _context, answer, id);
+                var validnouser = UserCharacterRelationHandler.ValidateAnswer(null, _context, answer, id);
                 var jsonnouser = JsonSerializer.Serialize(validnouser);
                 return Ok(jsonnouser);
             }
@@ -95,7 +97,12 @@ public class FlashCardDataController : ControllerBase
             /* Fetch user associated with token */
             var currentUser = UserHandler.GetUser(uid, _context);
             /* validate answer, and return response as json. */
-            var validation = RelationHandler.ValidateAnswer(currentUser, _context, answer, id);
+            var validation = mode switch
+            {
+                "character" => UserCharacterRelationHandler.ValidateAnswer(currentUser, _context, answer, id),
+                "phrase" => UserWordRelationshipHandler.ValidateAnswer(currentUser, _context, answer, id),
+                _ => throw new Exception($"current mode not supported, {mode}")
+            };
             var json = JsonSerializer.Serialize(validation);
             return Ok(json);
         }
@@ -108,7 +115,7 @@ public class FlashCardDataController : ControllerBase
         }
     }
     [HttpGet("userinfo")]
-    public async Task<IActionResult> GetUserInfo()
+    public async Task<IActionResult> GetUserInfo([FromQuery] string mode)
     {
         try
         {
@@ -127,7 +134,12 @@ public class FlashCardDataController : ControllerBase
             }
             /* Fetch user associated with token */
             var currentUser = UserHandler.GetUser(uid, _context);
-            var userStats = UserHandler.GetUserInfo(currentUser, _context);
+            var userStats = mode switch
+            {
+                "character" => UserHandler.GetCharacterStats(currentUser, _context),
+                "phrase" => UserHandler.GetPhraseStats(currentUser, _context),
+                _ => throw new Exception($"current mode not supported, {mode}")
+            };
             var json = JsonSerializer.Serialize(userStats);
             return Ok(json);
         }

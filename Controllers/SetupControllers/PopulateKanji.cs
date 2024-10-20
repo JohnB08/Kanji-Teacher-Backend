@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.models;
+using Kawazu;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kanji_teacher_backend.Controllers.SetupControllers;
@@ -11,9 +12,11 @@ namespace Kanji_teacher_backend.Controllers.SetupControllers;
 public class PopulateKanji : ControllerBase
 {
     private readonly KTContext _context;
-    public PopulateKanji(KTContext context)
+    private readonly KawazuConverter _converter;
+    public PopulateKanji(KTContext context, KawazuConverter converter)
     {
         _context = context;
+        _converter = converter;
     }
     /// <summary>
     /// Controller to populate the database with Kanji symbols from Kanjiapi.dev.
@@ -25,26 +28,13 @@ public class PopulateKanji : ControllerBase
     {
         try
         {
-            string BaseUrl = "https://kanjiapi.dev/v1/kanji/";
-            int MaxGrade = 8;
-            HttpClient client = new HttpClient();
-            List<string> Chars = [];
-            for (int i = 1; i <= MaxGrade; i++)
-            {
-                if (i == 7) continue;
-                var result = await client.GetAsync(BaseUrl + $"grade-{i}");
-                result.EnsureSuccessStatusCode();
-                var json = await result.Content.ReadAsStringAsync() ?? throw new NullReferenceException("Missing Json String after fetch.");
-                var newChars = JsonSerializer.Deserialize<List<string>>(json) ?? throw new NullReferenceException("Failed to parse Json.");
-                Chars.AddRange(newChars);
-            }
-            for (int i = 0; i < Chars.Count; i++)
-            {
-                var result = await client.GetAsync(BaseUrl + $"{Chars[i]}");
-                result.EnsureSuccessStatusCode();
-                var json = await result.Content.ReadAsStringAsync();
-                Character.SetEntity(json, _context);
-            }
+            var kanjiFilePath = "./raw/kanji.json";
+            var wordFilePath = "./raw/kanjiapi_full.json";
+            var kanjiJson = System.IO.File.ReadAllText(kanjiFilePath);
+            var wordJson = System.IO.File.ReadAllText(wordFilePath);
+            await Character.SetEntities(json: kanjiJson, context: _context, converter: _converter);
+            List<Character> characters = _context.Characters.ToList();
+            await Word.SetEntity(Chars: characters, Json: wordJson, context: _context, converter: _converter);
             return Ok();
         }
         catch (Exception ex)

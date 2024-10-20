@@ -10,7 +10,7 @@ public class ProgressHandler
         var Grade = user.MaxGrade;
         if (Grade < 1) return false;
         var xp = user.Xp;
-        return xp > 100 * (6 - Grade);
+        return xp > 100 * (10 - Grade);
     }
     public static void UpgradeGrade(UserTable user, KTContext context)
     {
@@ -18,7 +18,8 @@ public class ProgressHandler
         {
             user.MaxGrade -= 1;
             user.Xp = 0;
-            RelationHandler.CreateRelation(user, context);
+            UserCharacterRelationHandler.CreateRelation(user, context);
+            UserWordRelationshipHandler.CreateRelation(user, context);
             context.SaveChanges();
             return;
         }
