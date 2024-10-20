@@ -51,7 +51,7 @@ public class UserCharacterRelationHandler
         {
             var selectRelation = context.UserCharacterRelations.Where(e => e.User == user)
                                                             .Include(e => e.Char)
-                                                            .OrderBy(e => EF.Functions.Random() / (1 / e.Char.Freq) * (e.TimesCompleted + 1))
+                                                            .OrderBy(e => EF.Functions.Random() / (1.0 / (e.Char.Freq + e.TimesCompleted)))
                                                             .AsNoTracking()
                                                             .FirstOrDefault()
                                                             ?? throw new NullReferenceException($"could not find a relation");
