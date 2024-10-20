@@ -25,6 +25,8 @@
 
     RUN apt-get install sqlite3 -y
 
+    COPY backup.db /app/backup.db
+
     # Copy the built application from the build container to the runtime container
     COPY --from=build /app/out .
 
