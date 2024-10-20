@@ -1,6 +1,7 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Extensions;
 
 namespace Kanji_teacher_backend.Util;
 
@@ -50,7 +51,7 @@ public class UserCharacterRelationHandler
         {
             var selectRelation = context.UserCharacterRelations.Where(e => e.User == user)
                                                             .Include(e => e.Char)
-                                                            .OrderBy(e => EF.Functions.Random())
+                                                            .OrderBy(e => EF.Functions.Random() / (1 / e.Char.Freq) * (e.TimesCompleted + 1))
                                                             .AsNoTracking()
                                                             .FirstOrDefault()
                                                             ?? throw new NullReferenceException($"could not find a relation");
@@ -129,7 +130,7 @@ public class UserCharacterRelationHandler
             if (correctAnswer == answer)
             {
                 correctRelation.TimesCompleted += 1;
-                user.Xp += 4;
+                user.Xp += 2;
                 context.SaveChanges();
                 return new
                 {

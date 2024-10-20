@@ -50,7 +50,7 @@ public class UserWordRelationshipHandler
         {
             var selectRelation = context.UserWordRelations.Where(e => e.User == user)
                                                             .Include(e => e.Word)
-                                                            .OrderBy(e => EF.Functions.Random() / e.Word.Weight)
+                                                            .OrderBy(e => EF.Functions.Random() / e.Word.Weight * (e.TimesCompleted + 1))
                                                             .AsNoTracking()
                                                             .FirstOrDefault()
                                                             ?? throw new NullReferenceException($"could not find a relation");
@@ -102,7 +102,7 @@ public class UserWordRelationshipHandler
         if (correctAnswer == answer)
         {
             correctRelation.TimesCompleted += 1;
-            user.Xp += 4;
+            user.Xp += 2;
             context.SaveChanges();
             return new
             {
