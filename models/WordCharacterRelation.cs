@@ -7,11 +7,11 @@ namespace Kanji_teacher_backend.models;
 public partial class WordCharacterRelation
 {
     [Key]
-    public int Id { get; set; }
+    public int Id { get; init; }
     [ForeignKey("Char")]
-    public int CharId { get; set; }
+    public int CharId { get; init; }
     [ForeignKey("Word")]
-    public int WordId { get; set; }
-    public Character Char { get; set; }
-    public Word Word { get; set; }
+    public int WordId { get; init; }
+    public Character Char { get; init; }
+    public Word Word { get; init; }
 }

@@ -1,6 +1,7 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.Util;
 using DotNetEnv;
+using Kanji_Teacher_Backend.Util.Firebase;
 using Kawazu;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,9 +14,9 @@ var allowedOrigin = Environment.GetEnvironmentVariable("ALLOWED_ORIGIN") ?? "htt
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowedOrigin",
-        builder =>
+        corsBuilder =>
         {
-            builder
+            corsBuilder
                 .WithOrigins(allowedOrigin, "https://www.kanjiteacher.com", "https://kanjiteacher.com")
                 .AllowAnyMethod()
                 .AllowAnyHeader();
@@ -23,7 +24,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<KTContext>();
+builder.Services.AddDbContext<KtContext>();
 builder.Services.AddSingleton<FirebaseService>();
 builder.Services.AddSingleton<KawazuConverter>();
 
@@ -55,7 +56,7 @@ app.Urls.Add($"http://0.0.0.0:{port}");
 
 
 //Helper function for prod. ensuring database existence.
-using (var context = new KTContext())
+using (var context = new KtContext())
 {
     context.Database.EnsureCreated();
 }

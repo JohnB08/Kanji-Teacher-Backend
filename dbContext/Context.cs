@@ -3,14 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kanji_teacher_backend.dbContext;
 
-public class KTContext : DbContext
+public class KtContext : DbContext
 {
-    public DbSet<Character> Characters { get; set; }
-    public DbSet<Word> Words { get; set; }
-    public DbSet<UserTable> Users { get; set; }
-    public DbSet<UserCharacterRelation> UserCharacterRelations { get; set; }
-    public DbSet<UserWordRelation> UserWordRelations { get; set; }
-    public DbSet<WordCharacterRelation> WordCharacterRelations { get; set; }
+    public DbSet<Character> Characters { get; init; }
+    public DbSet<Word> Words { get; init; }
+    public DbSet<UserTable> Users { get; init; }
+    public DbSet<UserCharacterRelation> UserCharacterRelations { get; init; }
+    public DbSet<UserWordRelation> UserWordRelations { get; init; }
+    public DbSet<WordCharacterRelation> WordCharacterRelations { get; init; }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         var databaseLocation = Environment.GetEnvironmentVariable("DATABASE_LOCATION") ?? "/var/data/KanjiTeacherDatabase.db";

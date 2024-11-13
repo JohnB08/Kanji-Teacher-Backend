@@ -1,36 +1,23 @@
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.Json;
 
-namespace Kanji_teacher_backend.Util;
+namespace Kanji_teacher_backend.Util.RelationHandler;
 
-public class UserWordRelationshipHandler
+public static class UserWordRelationshipHandler
 {
     /// <summary>
     /// Function to create a relation between a user and their current max-grade characters.
     /// </summary>
     /// <param name="user"> the current User object from the database.</param>
     /// <param name="context"> the database context to find all valid characters. </param>
-    public static void CreateRelation(UserTable user, KTContext context)
+    public static async Task CreateRelation(UserTable user, KtContext context)
     {
         List<UserWordRelation> newRelations = [];
-        var Words = context.Words.Where(e => e.JLPT == user.MaxGrade).ToList();
-        if (Words.Count > 0)
-        {
-            for (int i = 0; i < Words.Count; i++)
-            {
-                UserWordRelation relation = new()
-                {
-                    User = user,
-                    Word = Words[i],
-                    TimesAttempted = 0,
-                    TimesCompleted = 0
-                };
-                newRelations.Add(relation);
-            }
-            context.UserWordRelations.AddRange(newRelations);
-        }
+        var words = context.Words.Where(e => e.JLPT == user.MaxGrade).ToList();
+        if (words.Count <= 0) return;
+        newRelations.AddRange(words.Select(t => new UserWordRelation() { User = user, Word = t, TimesAttempted = 0, TimesCompleted = 0 }));
+        await context.UserWordRelations.AddRangeAsync(newRelations);
     }
     /// <summary>
     /// Function to fetch a random relation based on a user. and generates data for a flash card on the front end. 
@@ -45,21 +32,21 @@ public class UserWordRelationshipHandler
     /// }
     /// </returns>
     /// <exception cref="NullReferenceException"> If it can't find a valid relationship on the current user, it throws a nullreference exception. </exception>
-    public static object GetRelationAndAnswers(UserTable user, KTContext context)
+    public static async Task<object> GetRelationAndAnswers(UserTable user, KtContext context)
     {
         {
-            var selectRelation = context.UserWordRelations.Where(e => e.User == user)
+            var selectRelation = await context.UserWordRelations.Where(e => e.User == user)
                                                             .Include(e => e.Word)
                                                             .OrderBy(e => EF.Functions.Random() / e.Word.Weight * (e.TimesCompleted + 1))
                                                             .AsNoTracking()
-                                                            .FirstOrDefault()
+                                                            .FirstOrDefaultAsync()
                                                             ?? throw new NullReferenceException($"could not find a relation");
             var relId = selectRelation.Id;
-            var relAnswer = selectRelation.Word.Description.Split(", ").FirstOrDefault();
+            var relAnswer = selectRelation.Word.Description.Split(", ").FirstOrDefault() ?? "";
             var relKanji = selectRelation.Word.Written;
-            var Pronounciation = selectRelation.Word.Pronounciation;
-            var Romanji = selectRelation.Word.Romanji;
-            var answerList = context.WordCharacterRelations
+            var pronounciation = selectRelation.Word.Pronounciation;
+            var romanji = selectRelation.Word.Romanji;
+            var answerList = await context.WordCharacterRelations
                                     .Where(wcr => wcr.WordId == selectRelation.CharId)
                                     .SelectMany(wcr => context.WordCharacterRelations
                                                 .Include(rel => rel.Word)
@@ -68,14 +55,14 @@ public class UserWordRelationshipHandler
                                     .OrderBy(d => EF.Functions.Random())
                                     .Take(3)
                                     .AsNoTracking()
-                                    .ToList();
+                                    .ToListAsync();
             answerList.Add(relAnswer);
             return new
             {
                 Id = relId,
                 Alternatives = answerList,
                 Kanji = relKanji,
-                OnReadings = Pronounciation == "" ? Pronounciation : Pronounciation + " | " + Romanji,
+                OnReadings = pronounciation == "" ? pronounciation : pronounciation + " | " + romanji,
                 KunReadings = ""
             };
         }
@@ -92,18 +79,18 @@ public class UserWordRelationshipHandler
     /// <returns></returns>
     /// <exception cref="NullReferenceException">If it cannot find a relation based on the ID</exception>
     /// <exception cref="Exception">If somehow the user is not connected to the relation with the id of Param.id, throw an exception.</exception>
-    public static object ValidateAnswer(UserTable user, KTContext context, string answer, int id)
+    public static async Task<object> ValidateAnswer(UserTable user, KtContext context, string answer, int id)
     {
-        var correctRelation = context.UserWordRelations.Include(e => e.Word)
+        var correctRelation = await context.UserWordRelations.Include(e => e.Word)
                                                        .Include(e => e.User)
-                                                       .FirstOrDefault(e => e.Id == id) ?? throw new NullReferenceException($"Database missmatch, no relation with Id {id}");
+                                                       .FirstOrDefaultAsync(e => e.Id == id) ?? throw new NullReferenceException($"Database missmatch, no relation with Id {id}");
         correctRelation.TimesAttempted += 1;
         var correctAnswer = correctRelation.Word.Description.Split(", ").FirstOrDefault();
         if (correctAnswer == answer)
         {
             correctRelation.TimesCompleted += 1;
             user.Xp += 2;
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             return new
             {
                 CharacterInfo = new
@@ -113,15 +100,13 @@ public class UserWordRelationshipHandler
                     Char = correctRelation.Word.Written,
                 },
                 Correct = true,
-                CanProgress = ProgressHandler.CheckProgress(user)
+                CanProgress = ProgressHandler.ProgressHandler.CheckProgress(user)
             };
         }
-        else
-        {
-            if (user.Xp > 1) user.Xp -= 1;
+        if (user.Xp > 1) user.Xp -= 1;
             else user.Xp = 0;
-            context.SaveChanges();
-            return new
+        await context.SaveChangesAsync();
+        return new
             {
                 CharacterInfo = new
                 {
@@ -132,6 +117,5 @@ public class UserWordRelationshipHandler
                 Correct = false,
                 CanProgress = false
             };
-        }
     }
 }
