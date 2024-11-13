@@ -1,4 +1,4 @@
-using System.Text.Json;
+
 using Kanji_teacher_backend.dbContext;
 using Kanji_teacher_backend.models;
 using Kawazu;
@@ -9,15 +9,8 @@ namespace Kanji_teacher_backend.Controllers.SetupControllers;
 
 [ApiController]
 [Route("api")]
-public class PopulateKanji : ControllerBase
+public class PopulateKanji(KtContext context, KawazuConverter converter) : ControllerBase
 {
-    private readonly KTContext _context;
-    private readonly KawazuConverter _converter;
-    public PopulateKanji(KTContext context, KawazuConverter converter)
-    {
-        _context = context;
-        _converter = converter;
-    }
     /// <summary>
     /// Controller to populate the database with Kanji symbols from Kanjiapi.dev.
     /// </summary>
@@ -28,13 +21,13 @@ public class PopulateKanji : ControllerBase
     {
         try
         {
-            var kanjiFilePath = "./raw/kanji.json";
-            var wordFilePath = "./raw/kanjiapi_full.json";
-            var kanjiJson = System.IO.File.ReadAllText(kanjiFilePath);
-            var wordJson = System.IO.File.ReadAllText(wordFilePath);
-            await Character.SetEntities(json: kanjiJson, context: _context, converter: _converter);
-            List<Character> characters = _context.Characters.ToList();
-            await Word.SetEntity(Chars: characters, Json: wordJson, context: _context, converter: _converter);
+            const string kanjiFilePath = "./raw/kanji.json";
+            const string wordFilePath = "./raw/kanjiapi_full.json";
+            var kanjiJson = await System.IO.File.ReadAllTextAsync(kanjiFilePath);
+            var wordJson = await System.IO.File.ReadAllTextAsync(wordFilePath);
+            await Character.SetEntities(json: kanjiJson, context: context, converter: converter);
+            var characters = context.Characters.ToList();
+            await Word.SetEntity(charlist: characters, json: wordJson, context: context, converter: converter);
             return Ok();
         }
         catch (Exception ex)

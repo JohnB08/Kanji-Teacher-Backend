@@ -21,79 +21,71 @@ public partial class Word
     public string Romanji { get; set; }
     public List<UserWordRelation> UserRelations { get; set; }
     public List<WordCharacterRelation> CharacterRelations { get; set; }
-    public static async Task SetEntity(List<Character> Chars, string Json, KTContext context, KawazuConverter converter)
+    public static async Task SetEntity(List<Character> charlist, string json, KtContext context, KawazuConverter converter)
     {
         List<string> writtenWord = [];
         Dictionary<Character, List<Word>> relationPairs = [];
-        List<Word> Words = [];
-        var WordDataDict = JsonSerializer.Deserialize<KanjiData>(Json) ?? throw new NullReferenceException("Failed to extract data");
-        foreach (var Char in Chars)
+        List<Word> words = [];
+        var wordDataDict = JsonSerializer.Deserialize<KanjiData>(json) ?? throw new NullReferenceException("Failed to extract data");
+        foreach (var character in charlist)
         {
-            if (WordDataDict.Words.TryGetValue(Char.Char, out KanjiWord[]? value))
+            if (!wordDataDict.Words.TryGetValue(character.Char, out var value)) continue;
+            foreach (var wordData in value)
             {
-                var WordDatas = value;
-
-                foreach (var WordData in WordDatas)
+                var meanings = "";
+                wordData.Meanings.ForEach(meaning =>
                 {
-                    string meanings = "";
-                    WordData.Meanings.ForEach(meaning =>
+                    meanings += string.Join(", ", meaning.Glosses) + ", ";
+                });
+                foreach (var variant in wordData.Variants.Where(variant => variant.Written.Contains(character.Char)))
+                {
+                    if (!writtenWord.Contains(variant.Written))
                     {
-                        meanings += string.Join(", ", meaning.Glosses) + ", ";
-                    });
-                    foreach (var variant in WordData.Variants)
-                    {
-                        if (variant.Written.Contains(Char.Char))
+                        var chars = variant.Written.ToCharArray();
+                        List<int> grades = [];
+                        for (var i = 0; i < chars.Length; i++)
                         {
-                            if (!writtenWord.Contains(variant.Written))
-                            {
-                                var chars = variant.Written.ToCharArray();
-                                List<int> Grades = [];
-                                for (int i = 0; i < chars.Count(); i++)
-                                {
-                                    int grade = 5;
-                                    var selectedChar = context.Characters.Where(e => e.Char == chars[i].ToString()).AsNoTracking().FirstOrDefault();
-                                    if (selectedChar != null) grade = selectedChar.JLPT;
-                                    Grades.Add(grade);
-                                }
-                                var Romanji = variant.Pronounced == "" ? "" : await converter.Convert(variant.Pronounced, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
-                                Word word = new()
-                                {
-                                    JLPT = Grades.Min(),
-                                    Description = meanings,
-                                    Pronounciation = variant.Pronounced,
-                                    Romanji = Romanji,
-                                    Written = variant.Written
-                                };
-                                writtenWord.Add(variant.Written);
-                                Words.Add(word);
-                                if (relationPairs.ContainsKey(Char))
-                                {
-                                    relationPairs[Char].Add(word);
-                                }
-                                else
-                                {
-                                    relationPairs.Add(Char, [word]);
-                                }
-                            }
-                            else
-                            {
-                                var existingWord = Words.FirstOrDefault(e => e.Written == variant.Written);
-                                if (relationPairs.ContainsKey(Char))
-                                {
-                                    relationPairs[Char].Add(existingWord);
-                                }
-                                else
-                                {
-                                    relationPairs.Add(Char, [existingWord]);
-                                }
-                            }
-
+                            var grade = 5;
+                            var selectedChar = context.Characters.Where(e => e.Char == chars[i].ToString()).AsNoTracking().FirstOrDefault();
+                            if (selectedChar != null) grade = selectedChar.JLPT;
+                            grades.Add(grade);
+                        }
+                        var romanji = variant.Pronounced == "" ? "" : await converter.Convert(variant.Pronounced, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
+                        Word word = new()
+                        {
+                            JLPT = grades.Min(),
+                            Description = meanings,
+                            Pronounciation = variant.Pronounced,
+                            Romanji = romanji,
+                            Written = variant.Written
+                        };
+                        writtenWord.Add(variant.Written);
+                        words.Add(word);
+                        if (relationPairs.ContainsKey(character))
+                        {
+                            relationPairs[character].Add(word);
+                        }
+                        else
+                        {
+                            relationPairs.Add(character, [word]);
                         }
                     }
-                };
-            }
+                    else
+                    {
+                        var existingWord = words.FirstOrDefault(e => e.Written == variant.Written);
+                        if (relationPairs.ContainsKey(character))
+                        {
+                            relationPairs[character].Add(existingWord);
+                        }
+                        else
+                        {
+                            relationPairs.Add(character, [existingWord]);
+                        }
+                    }
+                }
+            };
         }
-        await context.Words.AddRangeAsync(Words);
+        await context.Words.AddRangeAsync(words);
         foreach (var pair in relationPairs)
         {
             foreach (var word in pair.Value)
@@ -106,21 +98,21 @@ public partial class Word
             }
         };
         await context.SaveChangesAsync();
-        foreach (var word in Words)
+        foreach (var word in words)
         {
             word.Weight = GetWordWeight(word, context);
         }
-        context.UpdateRange(Words);
+        context.UpdateRange(words);
         await context.SaveChangesAsync();
     }
-    private static double GetWordWeight(Word word, KTContext context)
+    private static double GetWordWeight(Word word, KtContext context)
     {
-        var CharacterFrequecies = context.WordCharacterRelations
+        var characterFrequecies = context.WordCharacterRelations
                                         .Where(wcr => wcr.WordId == word.Id)
                                         .Include(wcr => wcr.Char)
                                         .Select(wcr => wcr.Char.Freq)
                                         .ToList();
-        var sumInverseFrequency = CharacterFrequecies.Sum(f => 1.0 / f);
+        var sumInverseFrequency = characterFrequecies.Sum(f => 1.0 / f);
         return sumInverseFrequency;
     }
 }

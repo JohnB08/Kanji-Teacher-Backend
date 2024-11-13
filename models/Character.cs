@@ -6,21 +6,27 @@ using Kawazu;
 
 namespace Kanji_teacher_backend.models;
 
-public partial class Character
+public class Character
 {
     [Key]
-    public int Id { get; set; }
-    public required string Char { get; set; }
-    public int Grade { get; set; }
-    public int JLPT { get; set; }
-    public int Freq { get; set; }
-    public string? KunReadings { get; set; }
-    public string? KunRomanji { get; set; }
-    public string? OnReadings { get; set; }
-    public string? OnRomanji { get; set; }
+    public int Id { get; init; }
+    [MaxLength(50)]
+    public required string Char { get; init; }
+    public int Grade { get; init; }
+    public int JLPT { get; init; }
+    public int Freq { get; init; }
+    [MaxLength(100)]
+    public string? KunReadings { get; init; }
+    [MaxLength(100)]
+    public string? KunRomanji { get; init; }
+    [MaxLength(100)]
+    public string? OnReadings { get; init; }
+    [MaxLength(100)]
+    public string? OnRomanji { get; init; }
+    [MaxLength(200)]
     public required string Description { get; set; }
-    public List<UserCharacterRelation> CharacterRelations { get; set; }
-    public List<WordCharacterRelation> WordRelations { get; set; }
+    public List<UserCharacterRelation> CharacterRelations { get; init; }
+    public List<WordCharacterRelation> WordRelations { get; init; }
 
 
     /// <summary>
@@ -28,30 +34,31 @@ public partial class Character
     /// </summary>
     /// <param name="json"> String representing the json object fetched from the KanjiDev API.</param>
     /// <param name="context"> The server's database context. </param>
+    /// <param name="converter"> KawazuConverter to convert text to kana and vise versa </param>
     /// <exception cref="NullReferenceException">If the json deserialization returns a null object. Throw.</exception>
-    public static async Task SetEntities(string json, KTContext context, KawazuConverter converter)
+    public static async Task SetEntities(string json, KtContext context, KawazuConverter converter)
     {
         var entities = JsonSerializer.Deserialize<Dictionary<string, KanjiInfo>>(json) ?? throw new NullReferenceException("Missing data in JSON");
         foreach (var entity in entities)
         {
-            var OnReadings = string.Join(", ", entity.Value.OnReadings);
-            var KunReadings = string.Join(", ", entity.Value.KunReadings);
-            var OnRomanji = OnReadings == "" ? null : await converter.Convert(OnReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
-            var KunRomanji = KunReadings == "" ? null : await converter.Convert(KunReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
+            var onReadings = string.Join(", ", entity.Value.OnReadings);
+            var kunReadings = string.Join(", ", entity.Value.KunReadings);
+            var onRomanji = onReadings == "" ? null : await converter.Convert(onReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
+            var kunRomanji = kunReadings == "" ? null : await converter.Convert(kunReadings, To.Romaji, Mode.Spaced, RomajiSystem.Hepburn);
             Character newChar = new()
             {
                 Char = entity.Key,
                 Grade = entity.Value.Grade ?? 0,
                 JLPT = entity.Value.JLPT ?? 0,
                 Freq = entity.Value.Freq ?? 3000,
-                KunReadings = KunReadings,
-                OnReadings = OnReadings,
-                KunRomanji = KunRomanji,
-                OnRomanji = OnRomanji,
+                KunReadings = kunReadings,
+                OnReadings = onReadings,
+                KunRomanji = kunRomanji,
+                OnRomanji = onRomanji,
                 Description = string.Join(", ", entity.Value.Description)
             };
             context.Characters.Add(newChar);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
     }
 }

@@ -19,4 +19,13 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\assets\index-DA7SkUuV.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\assets\index-r7hNRHrT.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>
